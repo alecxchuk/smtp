@@ -1,11 +1,12 @@
 const generateOTP = require("../helpers/otp_generator");
 const hashGenerator = require("../helpers/hash_generator");
-const mysqlConnection = require("../../config/connection");
 const sendEmail = require("../helpers/send_email");
+const { createVerificationData } = require("../../config/verification_db");
 // Send OTP verification
 const sendOTPVerificationEmail = async ({ user_id, email }, res) => {
-  console.log(user_id, 1234);
+  // otp creation time
   const createdAt = Date.now();
+  // otp expires in one hour
   const expiresAt = Date.now() + 3600000;
   try {
     // generate random
@@ -22,24 +23,13 @@ const sendOTPVerificationEmail = async ({ user_id, email }, res) => {
     // hash otp
     const hashedOTP = await hashGenerator(otp);
 
-    const inserVerification = new Promise((resolve, reject) => {
-      // Adding the hashed OTP to the database
-      mysqlConnection.query(
-        "INSERT INTO  verification(userId,hashedString,createdAt,expiresAt) VALUES (?,?,?,?)",
-        [user_id, hashedOTP, createdAt, expiresAt],
-        async (error) => {
-          if (error) {
-            reject({
-              message: "An error occured while adding verification detail",
-            });
-          }
-
-          resolve({ status: "SUCCESS" });
-        }
-      );
+    // save verification data to database
+    await createVerificationData({
+      createdAt,
+      expiresAt,
+      user_id,
+      hashedOTP,
     });
-
-    await inserVerification;
 
     // Send email
     await sendEmail(mailOptions);

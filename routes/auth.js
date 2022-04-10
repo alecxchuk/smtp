@@ -400,6 +400,13 @@ Router.post(
                     const token = jwt.sign({ id }, "jwtSecret", {
                       expiresIn: 300,
                     });
+
+                    // store token in cookie
+                    // res.cookie('access-token',token, {
+                    //   maxAge: 60*60*24*30*1000 // 30 days
+                    // })
+
+                    // Store user in se
                     req.session.user = rows[0];
 
                     res.json({

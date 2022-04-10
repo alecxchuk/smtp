@@ -1,5 +1,7 @@
-const authenticatUser = require("./authentication");
+const authenticateUser = require("../services/authentication");
 const jwtGenerator = require("../helpers/jwt_generator");
+const { sendSuccess, sendError } = require("../helpers/response_handler");
+const { signInSuccessful } = require("../helpers/response_messages");
 
 // Login controller
 const loginController = async (req, res) => {
@@ -9,22 +11,20 @@ const loginController = async (req, res) => {
     const password = req.body.password.trim();
 
     // checking if user is verified
-    const authenticatedUser = authenticatUser(email, password);
+    const authenticatedUser = await authenticateUser(email, password);
 
     // generate token
     const token = jwtGenerator(authenticatedUser.user_id);
 
-    res.json({
-      status: "SUCCESS",
-      messager: "Sign in successful",
-      data: authenticatedUser,
-      token,
-    });
+    // removing password from response payload
+    delete authenticatedUser.password;
+    // add token to payload
+    authenticatedUser.token = token;
+
+    // response
+    sendSuccess(res, authenticatedUser, signInSuccessful);
   } catch (error) {
-    res.json({
-      status: "FAILED",
-      message: error.message,
-    });
+    sendError(res, error);
   }
 };
 

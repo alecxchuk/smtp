@@ -1,20 +1,25 @@
-const { findUserByEmail } = require("../helpers/find_user");
+const { findUserByEmail } = require("../../config/user_db");
+const { throwError } = require("../helpers/response_handler");
+const {
+  emailOrPasswordIncorrect,
+  userNotVerified,
+} = require("../helpers/response_messages");
 const verifyHashedData = require("../helpers/verifyHashedData");
 
 // Authenticates a user given the user's email and password
 // returns the authenticated user
-const authenticatUser = async (email, password) => {
+const authenticateUser = async (email, password) => {
   try {
     // checking if user exists
     const user = await findUserByEmail(email);
 
     // user does not exist
     if (user === null) {
-      throw new Error("Incorrect email or password");
+      throwError(emailOrPasswordIncorrect);
     }
     // user is not verified
     if (!user.verified) {
-      throw new Error("User email has not been verified yet. Check your inbox");
+      throwError(userNotVerified, 403);
     }
     // hashed password
     const hashedPassword = user.password;
@@ -23,13 +28,13 @@ const authenticatUser = async (email, password) => {
 
     // password is incorrect
     if (!passwordMatch) {
-      throw new Error("Invalid email or password");
+      throwError(emailOrPasswordIncorrect);
     }
-
+    // returning the authenticated user
     return user;
   } catch (error) {
     throw error;
   }
 };
 
-module.exports = authenticatUser;
+module.exports = authenticateUser;

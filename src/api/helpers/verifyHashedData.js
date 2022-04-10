@@ -6,6 +6,7 @@ const verifyHashedData = async (unhashed, hashed) => {
     const match = await bcrypt.compare(unhashed, hashed);
     return match;
   } catch (error) {
+    console.log(error.message, 223);
     throw error;
   }
 };
